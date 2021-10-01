@@ -16,7 +16,7 @@ Answer: the pods are provided for testing, following this manual.
 
 Answer: The autoscaling is configured by [hpa.yaml](manifests/hpa.yaml) file. It was not tested since it is a simple pod with nginx frontpage. You can set in this file the minimum and maximum quantity of replicas, and other parameters can be set up as described in [HorizontalPodAutoscaler](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/). The [Autoscaling](#autoscaling) section shows an example.
 
-3. Ensure the deployment can handle rolling deployments and rollbacks
+3. **Ensure the deployment can handle rolling deployments and rollbacks**
 
 Answer: You can update a version using rolling update, and rollback the deployment. More details on how to do this is given in [Updating apps](#updating-apps) section. This could be done with the commands provided, or configured in a script or jenkins job, so that others could simply run the script.
 
@@ -24,7 +24,7 @@ Answer: You can update a version using rolling update, and rollback the deployme
 
 Answer: It is possible to set up a script or jenkins jobs with specific permission for each logged user. If the cluster is accessible, it is possible to create a user with access to an specific namespace, that could be an specific environment, and specify commands that could be runned. For example, to update a version, a role with update permissions to deployments should be created and associated to a AWS user. The [Cluster Authentication](https://docs.aws.amazon.com/eks/latest/userguide/managing-auth.html) manual in AWS provides more details.
 
-5. Bonus
+5. **Bonus**
 
 **How would you apply the configs to multiple environments (staging vs production)?**
 
@@ -34,6 +34,7 @@ Answer: It could be done something to create the yamls based on a template. I ca
 * Helm Charts: a more complex solution. Need a values.yaml file to specify variables, and a chart repo. More on [heml.sh](https://helm.sh/docs/topics/charts/)
 
 **How would you auto scale the deployment based on network latency instead of CPU?**
+
  Answer: It could be possible configuring a custom metric. This was not made during this exercise, but [this page](https://sysdig.com/blog/kubernetes-autoscaler/) gives an example on how to create a custom type in autoscale, using a custom metric. In this example:
 
  ```
@@ -81,6 +82,7 @@ minikube config set driver virtualbox
 minikube config set memory 4096
 minikube start
 minikube addons enable ingress
+minikube addons enable metrics-server
 ```
 
 The next steps will create the environment for the 7shifts pods.
@@ -89,16 +91,17 @@ The next steps will create the environment for the 7shifts pods.
 
 Create a namespace and the pods applying the yaml config files in manifests.
 
-```
-cd manifests/
-kubectl apply -f namespace.yaml
-kubectl apply -f container1.yaml
+```console
+$ cd manifests/
+$ kubectl apply -f namespace.yaml
+$ kubectl apply -f container1.yaml
+$ kubectl apply -f container2.yaml
 ```
 
 Check if the pods are already running
 
-```
-kubectl -n 7shifts get pods
+```console
+$ kubectl -n 7shifts get pods
 ```
 
 Check the IP address gave by ingress. Example:
@@ -158,7 +161,7 @@ $ [ "$?" -ne 0 ] && echo "ERROR" || echo "OK"
 OK
 ```
 
-Note that with version v1.2 the pod was not successfully updated. With an ERROR exit, we could make a rollout undo to revert the version.
+When updating to version v1.2 the pod was not successfully updated. Checking an ERROR exit, we could make a rollout undo to revert the version.
 
 ```console
 $ kubectl -n 7shifts set image deployment/container1-deploy container1=leafarlins/7shifts:c1-v1.2
@@ -172,4 +175,4 @@ $ kubectl -n 7shifts rollout undo deployment/container1-deploy
 deployment.apps/container1-deploy rolled back
 ```
 
-Note that for all of this work properly, it is important to define startupProbes for every pod.
+Note that for all of this work properly, it is important to define startupProbes for every pod. They were defined in deployment of each container.
